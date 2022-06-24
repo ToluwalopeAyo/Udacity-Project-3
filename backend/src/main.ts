@@ -31,7 +31,7 @@ async function bootstrap() {
     .addBearerAuth() // here is an intentional compile error. Remove the "x" and the backend should compile.
     .build();
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup(`api/${apiVersionPrefix}`, app, document);
+  SwaggerModule.setup(`api/${apiVersionPrefix}`, app, document );
   const config: ConfigService = app.get('ConfigService');
   const whitelist = config.CORS_WHITELIST;
   const corsOptions = {
