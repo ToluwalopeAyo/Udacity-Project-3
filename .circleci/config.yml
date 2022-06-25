@@ -305,15 +305,16 @@ jobs:
 
   smoke-test:
     docker: 
-      - image: cimg/python:3.10.4
+      - image: python:3.7-alpine3.11
     steps:  
       - checkout
       - run: 
           name: Install dependencies
           command: |
-            sudo apt update
-            sudo apt install curl
+            apk add --update curl
             pip install awscli
+            pip install nodejs
+            pip install npm
 
 
       - run: 
@@ -343,7 +344,7 @@ jobs:
             fi
       - destroy-environment  
       - revert-migrations
-      
+
 
 workflows:
   default:
