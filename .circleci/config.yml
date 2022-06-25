@@ -194,7 +194,7 @@ jobs:
       - run: 
           name: Install curl
           command: |
-            sudo apt-get install curl
+            sudo apt-get install curl -y
       - run: 
           name: Install awscli
           command: |
