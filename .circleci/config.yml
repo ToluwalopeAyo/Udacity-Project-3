@@ -218,6 +218,45 @@ jobs:
       - destroy-environment
       - revert-migrations
 
+  deploy-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/
+      - run: 
+          name: Install dependencies
+          command: |
+            sudo apt-get update && sudo apt-get install python -y
+            sudo apt-get -qq install awscli
+ 
+      - run: 
+          name: Get backend url
+          command: |
+            export BACKEND_IP=$( aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project, Values=udapeople" --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run: 
+          name: baking backend ip
+          command: |
+            cd frontend
+            npm i
+            npm run build
+          
+      - run: 
+          name: Deploy frontend objects
+          command: |
+              cd frontend
+              npm install
+              npm run build
+              aws s3 cp ./dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+        
+      - destroy-environment
+
 workflows:
   default:
     jobs:
@@ -237,3 +276,5 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
