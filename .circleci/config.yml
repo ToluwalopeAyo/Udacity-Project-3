@@ -13,6 +13,23 @@ commands:
             aws s3 rm s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}
 
+  revert-migrations:
+    description: Revert the last migration if successfully run in the current workflow.
+    steps:
+      - run: 
+          name: Revert migrations
+          working_directory: ./backend
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure https://kvdb.io/NFE8PeqbEhiC77gkWk7BhP/migration_${CIRCLE_WORKFLOW_ID:0:7})
+            echo $SUCCESS
+            if [[ "$SUCCESS" == "success" ]]
+            then
+              pwd
+              ls -la
+              npm run migrations:revert
+            fi
+
 jobs:
   build-frontend:
     docker:
@@ -177,7 +194,14 @@ jobs:
       - run: 
           name: Install curl
           command: |
-            npm install curl
+            sudo apt-get install curl
+      - run: 
+          name: Install awscli
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run: 
           name: Run migrations
           command: |
@@ -191,7 +215,8 @@ jobs:
             then
               curl https://kvdb.io/NFE8PeqbEhiC77gkWk7BhP/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
-
+      - destroy-environment
+      - revert-migrations
 
 workflows:
   default:
