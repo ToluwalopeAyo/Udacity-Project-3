@@ -257,6 +257,53 @@ jobs:
         
       - destroy-environment
 
+  deploy-backend:
+    docker:
+      - image: cimg/python:3.10.4
+    steps:
+      - checkout
+      
+      - add_ssh_keys:
+          fingerprints:
+            - "8e:6d:d1:40:8f:c3:02:93:3a:a7:a1:2d:72:e9:b8:2c"
+      
+      - attach_workspace:
+          at: ~/
+        
+      - run:
+          name: "Install dependencies"
+          command: |
+            sudo apt-get update
+            sudo apt-get install awscli
+            sudo apt install python3-pip
+            pip3 --version
+            sudo python3 -m pip install ansible
+            sudo apt install rsync -y
+      
+      - run: 
+          name: "Install Nodejs"
+          command: |
+            sudo apt-get update
+            curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash - 
+            sudo apt-get install -y nodejs
+            node --version
+            npm --version   
+
+      - run:
+          name: "Deploy backend"
+          command: |
+            cd backend
+            npm i
+            npm run build
+            cd ../.circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+
+      - destroy-environment  
+      - revert_migrations
+
+
 workflows:
   default:
     jobs:
